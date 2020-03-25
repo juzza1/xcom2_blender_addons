@@ -8,6 +8,7 @@ bl_info = {
 import bpy
 
 from collections import defaultdict
+import os
 import os.path
 import time
 
@@ -19,7 +20,11 @@ class ExportX2FBX(bpy.types.Operator):
 
 
     def export_fbx(self, outname):
-        export_dir = os.path.join('C:\\', 'Users', 'tim', 'Documents', 'x2', 'chosen', 'mod')
+        try:
+            export_dir = bpy.data.objects['fbx_settings']['output_directory']
+        except KeyError:
+            export_dir = os.path.join(bpy.path.abspath('//'), 'fbx_out')
+        os.makedirs(export_dir, exist_ok=True)
         bpy.ops.export_scene.fbx(
             filepath=os.path.join(export_dir, outname + '.fbx'),
             check_existing=False,
