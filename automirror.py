@@ -25,6 +25,8 @@ class AutoMirror(bpy.types.Operator):
         self.context.view_layer.objects.active = obj
         bpy.ops.object.transform_apply(location=True, rotation=True, scale=False)
         bpy.ops.object.mode_set(mode="EDIT")
+        bpy.ops.mesh.reveal()
+        bpy.ops.mesh.select_all(action='DESELECT')
         me = obj.data
         bm = bmesh.from_edit_mesh(me)
         for v in bm.verts:
@@ -51,8 +53,25 @@ class AutoMirror(bpy.types.Operator):
                 opposite = vg.replace('Right', 'Left')
             else:
                 continue
-            print('renaming {} to {}'.format(vg, opposite))
+            #print('{}: renaming {} to {}'.format(obj.name, vg, opposite))
             obj.vertex_groups[vg].name = opposite
+            
+        # Apply automirror to material prop magic
+        for k in obj.keys():
+            if k.startswith('mat_'):
+                repl = None
+                if '_Left_' in k:
+                    repl = k.replace('_Left_', '_Right_')
+                elif '_Right_' in k:
+                    repl = k.replace('_Right_', '_Left_')
+                    print('we here boys')
+                if repl:
+                    print('setting {} to {} for {}'.format(repl, obj[k], obj.name))
+                    obj[repl] = obj[k]
+                else:
+                    print('couldnt replace {}'.format(k))
+        
+        print("{}'s keys: {}".format(obj.name, obj.keys()))
         return {'FINISHED'}
 
 
@@ -67,4 +86,4 @@ def unregister():
 if __name__ == "__main__":
     register()
     
-    bpy.ops.object.automirror()
+    #bpy.ops.object.automirror()

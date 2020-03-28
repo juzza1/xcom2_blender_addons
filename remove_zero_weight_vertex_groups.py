@@ -33,7 +33,7 @@ class RemoveZeroWeightVertexGroups(bpy.types.Operator):
         # Remove groups in inverse order to prevent removal changing indices
         for vg_i in sorted(maxWeight.keys(), reverse=True):
             if maxWeight[vg_i] <= 0:
-                print("delete vertex group {}".format(obj.vertex_groups[vg_i].name))
+                #print("delete vertex group {}".format(obj.vertex_groups[vg_i].name))
                 obj.vertex_groups.remove(obj.vertex_groups[vg_i]) # actually remove the group
      
         return {'FINISHED'} 

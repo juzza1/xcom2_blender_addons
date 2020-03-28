@@ -5,15 +5,18 @@ bl_info = {
 }
 import bpy
 
-
-def apply_with_exceptions(obj, *args):
-    for m in obj.modifiers:
-        if type(m) not in args:
-            try:
-                bpy.ops.object.modifier_apply(modifier=m.name)
-            # Bad (disabled?) modifier, just nuke it
-            except RuntimeError:
-                bpy.ops.object.modifier_remove(modifier=m.name)
+def apply_modifiers(obj):
+    # some magic, assume we dont want to apply last armature modifier (for fbx export)
+    last_arm = None
+    if obj.modifiers and isinstance(obj.modifiers[-1], bpy.types.ArmatureModifier):
+        last_arm = obj.modifiers[-1]
+    for m in (m for m in obj.modifiers if m != last_arm):
+        print('applying {} to {}'.format(m, obj))
+        try:
+            bpy.ops.object.modifier_apply(modifier=m.name)
+        # Bad (disabled?) modifier, just nuke it
+        except RuntimeError:
+            bpy.ops.object.modifier_remove(modifier=m.name)
 
 
 class ApplyShapedModifiers(bpy.types.Operator):
@@ -26,7 +29,7 @@ class ApplyShapedModifiers(bpy.types.Operator):
         obj = context.active_object
         # Test if we don't have shape keys
         if not obj.data.shape_keys:
-            apply_with_exceptions(obj, bpy.types.ArmatureModifier)
+            apply_modifiers(obj)
             return {'FINISHED'}
 
         copied = obj.copy()
@@ -42,16 +45,13 @@ class ApplyShapedModifiers(bpy.types.Operator):
             context.view_layer.objects.active = target
             target.active_shape_key_index = 0
             bpy.ops.object.shape_key_remove(all=True)
-            print('Removing shape keys from {}'.format(target.name))
-            apply_with_exceptions(target, bpy.types.ArmatureModifier)
+            apply_modifiers(target)
             # Relies on base shape key being the first one, and all others
             # being relative to it
             source.select_set(True)
             source.active_shape_key_index = 0
             while source.active_shape_key:
                 # Copies key from source to target object
-                print('Copying key {} from {} to {}'.format(
-                    source.active_shape_key, source.name, target.name))
                 bpy.ops.object.shape_key_transfer()
                 # If we copy to target without keys, a new base key is created, remove this and
                 # consider the first copied key as base instead
@@ -95,4 +95,4 @@ def unregister():
 if __name__ == "__main__":
     register()
     
-    #bpy.ops.object.modifiers_apply_with_shapekeys()
+    bpy.ops.object.modifiers_apply_with_shapekeys()
