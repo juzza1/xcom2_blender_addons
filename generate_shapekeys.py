@@ -25,8 +25,11 @@ def make_shape_keys(obj, rules, delete_mixers=False):
             continue
         mix_values = rules['generated_shape_keys'][shape_key_name]
         for i, v in enumerate(mix_values):
-            print("setting key {} to {}".format(mix_keys[i], v))
-            obj.data.shape_keys.key_blocks[mix_keys[i]].value = v
+            try:
+                print("setting key {} to {}".format(mix_keys[i], v))
+                obj.data.shape_keys.key_blocks[mix_keys[i]].value = v
+            except IndexError:
+                pass
         print('creating new mix {}'.format(shape_key_name))
         obj.shape_key_add(name=shape_key_name, from_mix=True)
         reset_shape_keys(obj)
@@ -66,4 +69,4 @@ def unregister():
 if __name__ == "__main__":
     register()
     
-    bpy.ops.object.shape_key_generate()
+    #bpy.ops.object.shape_key_generate()
