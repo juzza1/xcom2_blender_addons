@@ -13,12 +13,13 @@ def extract_rgb(image, layer, color):
 
     # discard alpha by setting the output range to (1,1)
     pdb.gimp_drawable_levels(temp, 4, 0, 1, False, 0.1, 1, 1, False)
-    rr = int(color == 'R')
-    gg = int(color == 'G')
-    bb = int(color == 'B')
+    rr = int('R' in color)
+    gg = int('G' in color)
+    bb = int('B' in color)
     pdb.plug_in_colors_channel_mixer(image, temp, 0, rr, 0, 0, 0, gg, 0, 0, 0, bb)
-    # make white
-    pdb.plug_in_colors_channel_mixer(image, temp, 0, rr, gg, bb, rr, gg, bb, rr, gg, bb)
+    # make white if single color
+    if len(color) == 1:
+        pdb.plug_in_colors_channel_mixer(image, temp, 0, rr, gg, bb, rr, gg, bb, rr, gg, bb)
     temp.name = orig_name + '_' + color
 
 
@@ -41,7 +42,13 @@ def extract_alpha(image, layer):
 
 def _real_extract(image, drawable):
     source_layer = image.layers[0]
-    for t in ['A', 'B', 'G', 'R']:
+    # some hacks to detect xcom 2 texture names
+    extract_types = ['A']
+    if '_DIF' in source_layer.name:
+        extract_types.append('RGB')
+    else:
+        extract_types.extend(['B', 'G', 'R'])
+    for t in extract_types:
         if t == 'A':
             extract_alpha(image, source_layer)
         else:
